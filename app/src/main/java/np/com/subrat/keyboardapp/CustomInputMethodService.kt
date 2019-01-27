@@ -1,8 +1,11 @@
 package np.com.subrat.keyboardapp
 
+import android.content.Context
 import android.inputmethodservice.InputMethodService
 import android.inputmethodservice.Keyboard
 import android.inputmethodservice.KeyboardView
+import android.media.AudioManager
+import android.os.Vibrator
 import android.text.TextUtils
 import android.view.KeyEvent
 import android.view.View
@@ -11,6 +14,8 @@ import java.security.Key
 class CustomInputMethodService : InputMethodService() , KeyboardView.OnKeyboardActionListener{
     lateinit var keyboardView: KeyboardView
     lateinit var keyboard:Keyboard
+    lateinit var vibrator: Vibrator
+    lateinit var audioManager: AudioManager
     var caps = false
 
     override fun onCreateInputView(): View {
@@ -18,6 +23,8 @@ class CustomInputMethodService : InputMethodService() , KeyboardView.OnKeyboardA
         keyboard = Keyboard(this,R.xml.key_pad)
         keyboardView.keyboard = keyboard
         keyboardView.setOnKeyboardActionListener(this)
+        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         return keyboardView
     }
 
@@ -43,6 +50,7 @@ class CustomInputMethodService : InputMethodService() , KeyboardView.OnKeyboardA
 
     override fun onKey(primaryCode: Int, keyKodes: IntArray?) {
         var inputConnection = currentInputConnection
+        keyboardSound(primaryCode)
         inputConnection?.let { inputConnection->
             when(primaryCode){
                 Keyboard.KEYCODE_DELETE -> {
@@ -77,5 +85,17 @@ class CustomInputMethodService : InputMethodService() , KeyboardView.OnKeyboardA
 
     override fun onText(p0: CharSequence?) {
      }
+
+    private fun keyboardSound(keyCode:Int){
+        vibrator.vibrate(50)
+        when(keyCode){
+            32-> audioManager.playSoundEffect(AudioManager.FX_KEYPRESS_SPACEBAR)
+            Keyboard.KEYCODE_DONE, 10 -> audioManager.playSoundEffect(AudioManager.FX_KEYPRESS_RETURN)
+            Keyboard.KEYCODE_DELETE -> audioManager.playSoundEffect(AudioManager.FX_KEYPRESS_DELETE)
+            else -> audioManager.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD)
+        }
+
+
+    }
 
 }
